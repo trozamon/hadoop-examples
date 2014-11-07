@@ -40,7 +40,10 @@ public class SrcTokMapper extends Mapper<LongWritable, Text, Text, LongWritable>
         String[] tokens = line.toString().split(" ");
         for (String s:tokens)
         {
-            context.write(new Text(s), one);
+            if (s.length() > 0)
+            {
+                context.write(new Text(s), one);
+            }
         }
     }
 }
