@@ -19,8 +19,9 @@ package com.alectenharmsel.research;
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
-object AverageNGramsLength {
+class AverageNGramLength {
 
   private var in = "";
   private var out = "";
@@ -36,15 +37,28 @@ object AverageNGramsLength {
 
     val conf = new SparkConf().setAppName("AverageNGramsLength")
     val sc = new SparkContext(conf)
-    
+
     val ngrams = sc.textFile(in).map(line => line.split("\t"))
-    val yearlyLengthAll = ngrams.map(arr => (arr(1).toInt, arr(0).size.toDouble * arr(2).toDouble))
-    val yearlyLength = yearlyLengthAll.reduceByKey((a, b) => a + b)
-    val yearlyCount = ngrams.map(arr => (arr(1).toInt, arr(2).toDouble)).reduceByKey((a, b) => a + b)
-    val yearlyAvg = yearlyLength.join(yearlyCount).map(tup => (tup._1, tup._2._1 / tup._2._2))
+
+    val yearlyAvg = run(ngrams)
 
     yearlyAvg.saveAsTextFile(out)
-    
+
     sc.stop()
+  }
+
+  def run(data: RDD[Array[String]]): RDD[(Int, Double)] = {
+    val yearlyLengthAll = data.map(
+      arr => (arr(1).toInt, arr(0).size.toDouble * arr(2).toDouble)
+    )
+    val yearlyLength = yearlyLengthAll.reduceByKey((a, b) => a + b)
+    val yearlyCount = data.map(
+      arr => (arr(1).toInt, arr(2).toDouble)
+    ).reduceByKey((a, b) => a + b)
+    val yearlyAvg = yearlyLength.join(yearlyCount).map(
+      tup => (tup._1, tup._2._1 / tup._2._2)
+    )
+
+    return yearlyAvg
   }
 }
