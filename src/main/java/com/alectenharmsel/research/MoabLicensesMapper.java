@@ -27,24 +27,16 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.conf.Configuration;
 
-//Takes in filename and file contents
 public class MoabLicensesMapper extends Mapper<LongWritable, Text, Text, Text>
 {
-    public String year;
-
-    public void setup(Mapper.Context context)
-    {
-        year = context.getConfiguration().get("moab.year");
-    }
-
     public void map(LongWritable key, Text contents, Context context) throws IOException, InterruptedException
     {
-
-        String date = "";
-        String licenseInfo = "";
-
         if(contents.toString().contains("License"))
         {
+
+            String date = "";
+            String licenseInfo = "";
+            String pkgName = "";
             ArrayList<String> license = new ArrayList<String>();
             String[] blah = contents.toString().split(" ");
 
@@ -56,26 +48,15 @@ public class MoabLicensesMapper extends Mapper<LongWritable, Text, Text, Text>
                 }
             }
 
-            date = license.get(0);
-
-            for(int i = 2; i < license.size(); i++)
+            if (license.size() != 13)
             {
-                if(i == 4 || i == 5 || i == 7)
-                {
-                    licenseInfo += license.get(i) + ",";
-                }
+                return;
+            }
 
-            }
-            
-            if(licenseInfo.length() > 2)
-            {
-                if(licenseInfo.endsWith(","))
-                {
-                    licenseInfo = licenseInfo.substring(0, licenseInfo.length() - 1);
-                }
-                //First arg is date string, second is license string
-                context.write(new Text(date + "/" + year), new Text(licenseInfo));
-            }
+            date = license.get(0).replaceAll("/", "-");
+            pkgName = license.get(4);
+            licenseInfo += license.get(5) + "," + license.get(7);
+            context.write(new Text(pkgName + "-" + date), new Text(licenseInfo));
         }
     }
 }
