@@ -33,114 +33,26 @@ public class MoabLicensesReducer extends Reducer<Text, Text, Text, Text>
 {
     public void reduce(Text key, Iterable<Text> counts, Context context) throws IOException, InterruptedException
     {
-        HashMap<String,Integer> sums = new HashMap<String,Integer>();
-        HashMap<String,Integer> nums = new HashMap<String,Integer>();
-        HashMap<String,Integer> tots = new HashMap<String,Integer>();
+        int sum = 0;
+        int num = 0;
+        int total = 0;
 
         for(Text tmp:counts)
         {
             String[] split = tmp.toString().split(",");
-
-            if(sums.containsKey(split[0]))
-            {
-                int tmpSum = sums.get(split[0]);
-                int tmpNum = nums.get(split[0]);
-                int tmpTot = tots.get(split[0]);
-
-                sums.remove(split[0]);
-                nums.remove(split[0]);
-                tots.remove(split[0]);
-
-                tmpSum += Integer.parseInt(split[1]);
-                tmpNum++;
-                if(tmpTot < Integer.parseInt(split[2]))
-                {
-                    tmpTot = Integer.parseInt(split[2]);
-                }
-
-                sums.put(split[0], tmpSum);
-                nums.put(split[0], tmpNum);
-                tots.put(split[0], tmpTot);
-            }
-            else
-            {
-                int parsedSum = Integer.parseInt(split[1]);
-                int parsedTot = Integer.parseInt(split[2]);
-                sums.put(split[0], parsedSum);
-                nums.put(split[0], 1);
-                tots.put(split[0], parsedTot);
-            }
+            sum += Integer.parseInt(split[0]);
+            total += Integer.parseInt(split[1]);
+            num++;
         }
 
-        String[] licenses = new String[sums.keySet().toArray().length];
-        Integer[] rawSums = new Integer[sums.values().toArray().length];
-        Integer[] rawNums = new Integer[nums.values().toArray().length];
-        Integer[] rawTots = new Integer[tots.values().toArray().length];
-        for(int i = 0; i < sums.keySet().toArray().length; i++)
-        {
-            try
-            {
-                licenses[i] = (String) sums.keySet().toArray()[i];
-            }
-            catch(ClassCastException e)
-            {
-                context.write(key, new Text("Caught a ClassCastException"));
-            }
-            catch(ArrayIndexOutOfBoundsException e)
-            {
-                context.write(key, new Text("licenses out of bounds: " + i + " out of " + licenses.length));
-            }
-
-            try
-            {
-                rawSums[i] = (Integer) sums.values().toArray()[i];
-            }
-            catch(ClassCastException e)
-            {
-                context.write(key, new Text("Caught a ClassCastException"));
-            }
-            catch(ArrayIndexOutOfBoundsException e)
-            {
-                context.write(key, new Text("sums out of bounds: " + i + " out of " + licenses.length));
-            }
-
-            try
-            {
-                rawNums[i] = (Integer) nums.values().toArray()[i];
-            }
-            catch(ClassCastException e)
-            {
-                context.write(key, new Text("Caught a ClassCastException"));
-            }
-            catch(ArrayIndexOutOfBoundsException e)
-            {
-                context.write(key, new Text("nums out of bounds: " + i + " out of " + licenses.length));
-            }
-
-            try
-            {
-                rawTots[i] = (Integer) tots.values().toArray()[i];
-            }
-            catch(ClassCastException e)
-            {
-                context.write(key, new Text("Caught a ClassCastException"));
-            }
-            catch(ArrayIndexOutOfBoundsException e)
-            {
-                context.write(key, new Text("tots out of bounds: " + i + " out of " + licenses.length));
-            }
+        double avgAvail = (double)sum / (double) num;
+        String avgTotal = "";
+        if (total % num == 0) {
+            avgTotal = String.valueOf(total/num);
+        } else {
+            avgTotal = String.valueOf((double) total / (double) num);
         }
 
-        for(int i = 0; i < licenses.length; i++)
-        {
-            try
-            {
-                context.write(key, new Text(licenses[i] + "," + (rawSums[i].doubleValue() / rawNums[i].doubleValue()) + "," + rawTots[i]));
-            }
-            catch(ArrayIndexOutOfBoundsException e)
-            {
-                context.write(key, new Text("Final out of bounds: " + i + " out of " + licenses.length));
-            }
-        }
+        context.write(key, new Text(avgAvail + "," + avgTotal));
     }
 }
