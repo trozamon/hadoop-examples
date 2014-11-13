@@ -14,46 +14,39 @@
  * limitations under the License.
  */
 
-/*
- * MapReduce job to count the lines in a file
- * Used for big jobs
- */
-
 package com.alectenharmsel.research;
 
-import java.util.ArrayList;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.BufferedOutputStream;
-import java.io.OutputStream;
-
 import java.io.IOException;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.*;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.util.GenericOptionsParser;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.GenericOptionsParser;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 
 public class MoabLicenses extends Configured implements Tool
 {
     public int run(String[] args) throws Exception
     {
-        if(args.length != 3)
+        if(args.length != 2)
         {
-            System.err.println("Usage: MoabLicenses <input> <output> <year>");
+            System.err.println("Usage: MoabLicenses <input> <output>");
             System.exit(-1);
         }
 
         Configuration conf = getConf();
-        conf.setInt("moab.year", Integer.parseInt(args[2]));
         Job job = new Job(conf, "MoabLicenses");
         job.setJarByClass(MoabLicenses.class);
 
@@ -74,12 +67,11 @@ public class MoabLicenses extends Configured implements Tool
 
     public static void main(String[] args) throws Exception
     {
-        GenericOptionsParser parse = new GenericOptionsParser(new Configuration(), args);
-        Configuration conf = parse.getConfiguration();
+        GenericOptionsParser parser = new GenericOptionsParser(new Configuration(), args);
+        Configuration conf = parser.getConfiguration();
         conf.set("mapreduce.output.textoutputformat.separator", ",");
-        conf.set("mapred.textoutputformat.separator", ",");
 
-        int res = ToolRunner.run(conf, new MoabLicenses(), parse.getRemainingArgs());
+        int res = ToolRunner.run(conf, new MoabLicenses(), parser.getRemainingArgs());
 
         System.exit(res);
     }

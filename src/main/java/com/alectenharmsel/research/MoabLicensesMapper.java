@@ -31,9 +31,8 @@ public class MoabLicensesMapper extends Mapper<LongWritable, Text, Text, Text>
 {
     public void map(LongWritable key, Text contents, Context context) throws IOException, InterruptedException
     {
-        if(contents.toString().contains("License"))
+        if (contents.toString().contains("License"))
         {
-
             String date = "";
             String licenseInfo = "";
             String pkgName = "";

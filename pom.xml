@@ -4,7 +4,7 @@
     <groupId>com.alectenharmsel.research</groupId>
     <artifactId>hadoop-examples</artifactId>
     <packaging>jar</packaging>
-    <version>2.3.0</version>
+    <version>2.5.0</version>
     <name>hadoop-examples</name>
     <url>http://github.com/trozamon/hadoop-examples</url>
     <properties>
@@ -20,17 +20,17 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
-            <version>2.3.0</version>
+            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>2.3.0</version>
+            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
-            <version>2.3.0</version>
+            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.mrunit</groupId>
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.10</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
