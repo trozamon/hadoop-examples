@@ -7,6 +7,11 @@
     <version>2.5.0</version>
     <name>hadoop-examples</name>
     <url>http://github.com/trozamon/hadoop-examples</url>
+    <description>
+        A small collection of examples for both Hadoop and Spark. The
+        dependencies follow the current state of software on the University of
+        Michigan's HPC cluster.
+    </description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
