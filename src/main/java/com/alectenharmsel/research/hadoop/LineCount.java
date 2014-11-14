@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-/*
- * MapReduce job to count the lines in a file
- * Used for big jobs
- */
+package com.alectenharmsel.research.hadoop;
 
-package com.alectenharmsel.hadoop;
-
+import com.alectenharmsel.research.WholeBlockInputFormat;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,54 +30,52 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-public class CodeTokenizer extends Configured implements Tool
+enum LcCounters
 {
+    NUM_LINES
+}
 
-    public class Map extends Mapper<LongWritable, Text, Text, LongWritable>
+public class LineCount extends Configured implements Tool
+{
+    public class Map extends Mapper<Text, Text, Text, LongWritable>
     {
-        private final LongWritable one = new LongWritable(1);
-
-        public void map(LongWritable key, Text contents, Context context) throws IOException, InterruptedException
+        public void map(Text key, Text contents, Context context) throws IOException, InterruptedException
         {
-            StringBuilder line = new StringBuilder(contents.toString());
-            for (int i = 0; i < line.length(); i++)
+            long numLines = 0;
+            String tmp = contents.toString();
+
+            for(int i = 0; i < tmp.length(); i++)
             {
-                if (!Character.isLetter(line.charAt(i)))
+                if(tmp.charAt(i) == '\n')
                 {
-                    line.replace(i, i + 1, " ");
+                    numLines++;
                 }
             }
-            String[] tokens = line.toString().split(" ");
-            for (String s:tokens)
-            {
-                if (s.length() > 0)
-                {
-                    context.write(new Text(s), one);
-                }
-            }
+
+            context.write(key, new LongWritable(numLines));
         }
     }
 
-    public class Reduce extends Reducer<Text, LongWritable, Text, Text>
+    public class Reduce extends Reducer<Text, LongWritable, Text, LongWritable>
     {
         public void reduce(Text key, Iterable<LongWritable> counts, Context context) throws IOException, InterruptedException
         {
-            long sum = 0;
+            long total = 0;
+
             for(LongWritable tmp:counts)
             {
-                sum += tmp.get();
+                total += tmp.get();
             }
 
-            context.write(key, new Text(String.valueOf(sum)));
+            context.getCounter(LcCounters.NUM_LINES).increment(total);
+            context.write(key, new LongWritable(total));
         }
     }
 
@@ -89,13 +83,14 @@ public class CodeTokenizer extends Configured implements Tool
     {
         if(args.length != 2)
         {
-            System.err.println("Usage: MoabLicenses <input> <output>");
+            System.err.println("Usage: LineCounter <input> <output>");
             System.exit(-1);
         }
 
-        Configuration conf = getConf();
-        Job job = new Job(conf, "SrcTok");
-        job.setJarByClass(CodeTokenizer.class);
+        Job job = new Job(getConf(), "LineCount");
+        job.setJarByClass(LineCount.class);
+
+        job.setInputFormatClass(WholeBlockInputFormat.class);
 
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
@@ -103,13 +98,22 @@ public class CodeTokenizer extends Configured implements Tool
         job.setMapperClass(Map.class);
         job.setReducerClass(Reduce.class);
 
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(LongWritable.class);
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(LongWritable.class);
 
+        Configuration check = job.getConfiguration();
         boolean success = job.waitForCompletion(true);
 
+        //Get the counter here, output to a file called total in the dir
+        Counters counters = job.getCounters();
+
+        //Throw it in the file
+        Path outPath = new Path(args[1]);
+        FileSystem fs = outPath.getFileSystem(check);
+        OutputStream out = fs.create(new Path(outPath, "total"));
+        String total = counters.findCounter(LcCounters.NUM_LINES).getValue() + "\n";
+        out.write(total.getBytes());
+        out.close();
         return success ? 0 : 1;
     }
 
@@ -118,8 +122,7 @@ public class CodeTokenizer extends Configured implements Tool
         GenericOptionsParser parse = new GenericOptionsParser(new Configuration(), args);
         Configuration conf = parse.getConfiguration();
 
-        int res = ToolRunner.run(conf, new CodeTokenizer(),
-                parse.getRemainingArgs());
+        int res = ToolRunner.run(conf, new LineCount(), parse.getRemainingArgs());
 
         System.exit(res);
     }

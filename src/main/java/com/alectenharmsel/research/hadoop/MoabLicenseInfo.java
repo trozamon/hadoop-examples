@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alectenharmsel.hadoop;
+package com.alectenharmsel.research.hadoop;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
