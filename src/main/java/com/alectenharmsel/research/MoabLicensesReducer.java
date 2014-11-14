@@ -53,6 +53,18 @@ public class MoabLicensesReducer extends Reducer<Text, Text, Text, Text>
             avgTotal = String.valueOf((double) total / (double) num);
         }
 
-        context.write(key, new Text(avgAvail + "," + avgTotal));
+        String[] keyArr = key.toString().split("-");
+        String keyOut = keyArr[keyArr.length - 2] + "-" +
+            keyArr[keyArr.length - 1];
+
+        keyOut += ",";
+        for (int i = 0; i < keyArr.length - 2; i++) {
+            if (i > 0) {
+                keyOut += "-";
+            }
+            keyOut += keyArr[i];
+        }
+
+        context.write(new Text(keyOut), new Text(avgAvail + "," + avgTotal));
     }
 }

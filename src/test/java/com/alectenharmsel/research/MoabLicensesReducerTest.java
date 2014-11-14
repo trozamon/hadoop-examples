@@ -58,4 +58,11 @@ public class MoabLicensesReducerTest {
         double tmp = Double.parseDouble(total.split(",")[1]);
         Assert.assertEquals("The total should be 7.0", 7.0, tmp, 0.01);
     }
+
+    @Test
+    public void testZeroKey() {
+        String key = res.get(0).getFirst().toString();
+        Assert.assertEquals("The key should be properly formatted",
+            "05-11,cfd_solv_ser", key);
+    }
 }
