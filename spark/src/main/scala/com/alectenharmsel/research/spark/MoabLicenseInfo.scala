@@ -21,7 +21,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-class MoabLicenseInfo {
+object MoabLicenseInfo {
 
   private var in = "";
   private var out = "";
@@ -50,21 +50,37 @@ class MoabLicenseInfo {
   def run(data: RDD[String]): RDD[(String, String, Double, Double)] = {
     val licensesRaw = data.filter(line => line.contains("License"))
 
-    val split = licensesRaw.map(line => line.split(" ")).map(arr => arr.filter(x => x.size > 0))
+    val split = licensesRaw.map(
+      line => line.split(" ")
+    ).map(
+      arr => arr.filter(x => x.size >= 1)
+    ).filter(
+      arr => arr.size >= 8
+    )
 
-    val licenses = split.map(arr => Array[String](
+    val licenses = split.map(
+      arr => Array[String](
         arr(4) + "-" + arr(0).replaceAll("/", "-"),
         arr(5),
         arr(7)
       )
     )
 
-    val sum = licenses.map(arr => (arr(0), arr(1).toDouble)).reduceByKey((a, b) => a + b)
-    val total = licenses.map(arr => (arr(0), arr(2).toDouble)).reduceByKey((a, b) => a + b)
+    val sum = licenses.map(
+      arr => (arr(0), arr(1).toDouble)
+    ).reduceByKey((a, b) => a + b)
 
-    val ret = sum.join(total).map(tup =>
-        (tup._1.split("-")(-1), tup._1.split("-").slice(0, -1).mkString("-"),
-         tup._2._1, tup._2._2)
+    val total = licenses.map(
+      arr => (arr(0), arr(2).toDouble)
+    ).reduceByKey((a, b) => a + b)
+
+    val ret = sum.join(total).map(
+      tup => (
+        tup._1.split("-").tail.mkString("/"),
+        tup._1.split("-")(0),
+        tup._2._1,
+        tup._2._2
+      )
     )
 
     return ret
