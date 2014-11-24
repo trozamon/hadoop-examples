@@ -48,9 +48,7 @@ object MoabLicenseInfo {
   }
 
   def run(data: RDD[String]): RDD[(String, String, Double, Double)] = {
-    val licensesRaw = data.filter(line => line.contains("License"))
-
-    val split = licensesRaw.map(
+    val split = data.map(
       line => line.split(" ")
     ).map(
       arr => arr.filter(x => x.size >= 1)
@@ -58,7 +56,9 @@ object MoabLicenseInfo {
       arr => arr.size >= 8
     )
 
-    val licenses = split.map(
+    val licensesRaw = split.filter(arr => arr(3) == "License")
+
+    val licenses = licensesRaw.map(
       arr => Array[String](
         arr(4) + "-" + arr(0).replaceAll("/", "-"),
         arr(5),

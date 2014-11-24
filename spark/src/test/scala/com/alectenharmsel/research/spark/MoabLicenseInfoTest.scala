@@ -16,6 +16,10 @@ class MoabLicenseInfoTest extends FlatSpec with Matchers {
   val data = sc.parallelize(
     Array[String](
       "05/11 22:58:25  MNodeUpdateResExpression(nyx5624,FALSE,TRUE)",
+      "07/06 00:04:37  INFO:     job 10627132 violates active HARD MAXMEM limit of 512000 for acct heyo: Filesystem closed",
+      "03/31 00:15:25  INFO:     Node 'nyx4009' status: state='Busy' rsvlist='screms.2325,9938104,9938105,9911261,9911265,9911278,9911279,9911282,9911283,9934851,9911285,9934846,9934847' joblist='9911261,9911265,9911278,9911279,9911282,9911283,9911285,9934846,9934847,9934851,9938104,9938105'",
+      "03/31 00:15:18  INFO:     current iteration load for total: 77006",
+      "03/31 00:32:39  INFO:     adding class 'cac' to node 'nyx5567'",
       "05/11 22:58:25  INFO:     License cfd_solv_ser        0 of   6 available  (Idle: 33.3%  Active: 66.67%)",
       "05/11 22:59:25  INFO:     License cfd_solv_ser        0 of   6 available  (Idle: 33.3%  Active: 66.67%)",
       "05/11 23:58:25  INFO:     License cfd_solv_ser        1 of   7 available  (Idle: 33.3%  Active: 66.67%)",
