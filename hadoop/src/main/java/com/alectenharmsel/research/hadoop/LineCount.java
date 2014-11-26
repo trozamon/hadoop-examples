@@ -46,6 +46,11 @@ public class LineCount extends Configured implements Tool
 {
     public class Map extends Mapper<Text, Text, Text, LongWritable>
     {
+        Map()
+        {
+
+        }
+
         public void map(Text key, Text contents, Context context) throws IOException, InterruptedException
         {
             long numLines = 0;
