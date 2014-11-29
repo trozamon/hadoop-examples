@@ -53,15 +53,23 @@ public class LineCount extends Configured implements Tool
 
         public void map(Text key, Text contents, Context context) throws IOException, InterruptedException
         {
+            int i = 0;
+            int lastI = 0;
             long numLines = 0;
             String tmp = contents.toString();
 
-            for(int i = 0; i < tmp.length(); i++)
+            for(i = 0; i < tmp.length(); i++)
             {
                 if(tmp.charAt(i) == '\n')
                 {
+                    lastI = i;
                     numLines++;
                 }
+            }
+
+            if (i > lastI + 1)
+            {
+                numLines++;
             }
 
             context.write(key, new LongWritable(numLines));

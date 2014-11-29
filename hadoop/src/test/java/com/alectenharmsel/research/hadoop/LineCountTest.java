@@ -22,11 +22,12 @@ public class LineCountTest {
 
     @Before
     public void setUp() {
-        mapDriver = new MapDriver(new MoabLicenseInfo().new Map());
-        reduceDriver = new ReduceDriver(new MoabLicenseInfo().new Reduce());
+        mapDriver = new MapDriver(new LineCount().new Map());
+        reduceDriver = new ReduceDriver(new LineCount().new Reduce());
 
         mapDriver
-            .withInput(new Text("heyo"), new Text("boring line contents"))
+            .withInput(new Text("heyo"),
+                    new Text("boring line contents\nlol more lines\n"))
             .withInput(new Text("heyo2"), new Text("boring line contents"));
 
         key = new Text("heyo");
@@ -39,6 +40,33 @@ public class LineCountTest {
     @Test
     public void testTwoMapOutputs() throws IOException {
         res = mapDriver.run();
-        Assert.assertEquals("Map should have 2 outputs", res.size(), 2);
+        Assert.assertEquals("Map should have 2 outputs", 2, res.size());
+    }
+
+    @Test
+    public void testFirstMapOutput() throws IOException {
+        res = mapDriver.run();
+        Assert.assertEquals("First map output should be 2", (long) 2,
+                res.get(0).getSecond().get());
+    }
+
+    @Test
+    public void testSecondMapOutput() throws IOException {
+        res = mapDriver.run();
+        Assert.assertEquals("Second map output should be 1", (long) 1,
+                res.get(1).getSecond().get());
+    }
+
+    @Test
+    public void testReduceSize() throws IOException {
+        res = reduceDriver.run();
+        Assert.assertEquals("Single reduce output", 1, res.size());
+    }
+
+    @Test
+    public void testReduceOutput() throws IOException {
+        res = reduceDriver.run();
+        Assert.assertEquals("Reducers simply sums", (long) 110,
+                res.get(0).getSecond().get());
     }
 }
