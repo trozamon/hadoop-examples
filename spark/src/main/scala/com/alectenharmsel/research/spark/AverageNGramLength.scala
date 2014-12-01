@@ -21,7 +21,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-class AverageNGramLength {
+object AverageNGramLength {
 
   private var in = "";
   private var out = "";
