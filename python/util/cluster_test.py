@@ -37,8 +37,8 @@ def test_hadoop_java():
         'com.alectenharmsel.research.LineCount',
         '-Dmapreduce.job.queuename=' + queue,
         'trozamon_testing/input',
-        'trozamon_testing/output/hadoop_java']
-        )
+        'trozamon_testing/output/hadoop_java'
+        ])
 
     if hdfs_rmdir('trozamon_testing/output/hadoop_java') != 0:
         return 1
@@ -49,8 +49,22 @@ def test_hadoop_java():
     return subprocess.call(cmd, shell=True)
 
 def test_hadoop_streaming():
-    print("Testing Hadoop Streaming")
-    return 0
+    cmd = ' '.join([
+        'yarn jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar',
+        '-Dmapreduce.job.queuename=' + queue,
+        '-input trozamon_testing/input',
+        '-output trozamon_testing/output/hadoop_streaming',
+        '-mapper python/srctok-map.py -reducer python/sum.py',
+        '-file python/srctok-map.py -file python/sum.py'
+        ])
+
+    if hdfs_rmdir('trozamon_testing/output/hadoop_streaming') != 0:
+        return 1
+
+    print('Testing Hadoop Streaming by running:')
+    print(cmd)
+
+    return subprocess.call(cmd, shell=True)
 
 def test_pig():
     print("Testing Pig")
@@ -141,7 +155,7 @@ def run():
     for test in tests:
         res = test()
         if res != 0:
-            print(str(test) + ': FAILURE')
+            print(test.__name__ + ': FAILURE')
             return res
 
     return 0
