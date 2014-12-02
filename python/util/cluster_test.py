@@ -4,6 +4,10 @@ import subprocess
 
 queue = 'staff'
 __version__ = '2.5.0'
+prefix = 'trozamon_testing'
+input_unstructured = '/'.join([prefix, 'input_unstructured'])
+input_structured = '/'.join([prefix, 'input_structured'])
+output_prefix = '/'.join([prefix, 'output'])
 
 big_description = """Hadoop and related software cluster tester. Given the
 fast-paced nature of Hadoop, Spark, Hive, and other technologies, running a
@@ -32,15 +36,16 @@ def hdfs_rmdir(dir):
     return 0
 
 def test_hadoop_java():
+    outdir = '/'.join([output_prefix, 'hadoop_java'])
     cmd = ' '.join([
         'yarn jar hadoop/target/hadoop-examples-hadoop-' + __version__ + '.jar',
         'com.alectenharmsel.research.LineCount',
         '-Dmapreduce.job.queuename=' + queue,
-        'trozamon_testing/input',
-        'trozamon_testing/output/hadoop_java'
+        input_unstructured,
+        outdir
         ])
 
-    if hdfs_rmdir('trozamon_testing/output/hadoop_java') != 0:
+    if hdfs_rmdir(outdir) != 0:
         return 1
 
     print('Testing Hadoop Java by running:')
@@ -49,16 +54,17 @@ def test_hadoop_java():
     return subprocess.call(cmd, shell=True)
 
 def test_hadoop_streaming():
+    outdir = '/'.join([output_prefix, 'hadoop_streaming'])
     cmd = ' '.join([
         'yarn jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar',
         '-Dmapreduce.job.queuename=' + queue,
-        '-input trozamon_testing/input',
-        '-output trozamon_testing/output/hadoop_streaming',
+        '-input ' + input_unstructured,
+        '-output ' + outdir,
         '-mapper python/srctok-map.py -reducer python/sum.py',
         '-file python/srctok-map.py -file python/sum.py'
         ])
 
-    if hdfs_rmdir('trozamon_testing/output/hadoop_streaming') != 0:
+    if hdfs_rmdir(outdir) != 0:
         return 1
 
     print('Testing Hadoop Streaming by running:')
@@ -68,19 +74,35 @@ def test_hadoop_streaming():
 
 def test_pig():
     print("Testing Pig")
-    return 0
+    return 1
 
 def test_spark():
-    print("Testing Spark")
-    return 0
+    outdir = '/'.join([output_prefix, 'spark'])
+    cmd = ' '.join([
+        'spark-submit',
+        '--master yarn-client',
+        '--queue ' + queue,
+        '--class com.alectenharmsel.research.spark.LineCount',
+        'spark/target/hadoop-examples-spark-' + __version__ + '.jar',
+        input_unstructured,
+        outdir
+        ])
+
+    if hdfs_rmdir(outdir) != 0:
+        return 1
+
+    print('Testing Spark by running:')
+    print(cmd)
+
+    return subprocess.call(cmd, shell=True)
 
 def test_pyspark():
     print("Testing PySpark")
-    return 0
+    return 1
 
 def test_hive():
     print("Testing Hive")
-    return 0
+    return 1
 
 def run():
     parser = argparse.ArgumentParser(description=big_description)
@@ -131,34 +153,48 @@ def run():
     if parsed_args.spark:
         tests.append(test_spark)
 
-    print("Running \"mvn package -DskipTests\"...")
-    if subprocess.call("mvn package -DskipTests", shell=True) != 0:
-        print("Maven build failed. Are you running this in the root " +
-                "directory of the repo?")
+    print('Running "mvn package -DskipTests"...')
+    if subprocess.call('mvn package -DskipTests', shell=True) != 0:
+        print('Maven build failed. Are you running this in the root ' +
+                'directory of the repo?')
         return 1
 
-    print("Uploading pom.xml to trozamon_testing/input/pom.xml...")
-    err = hdfs_mkdir('trozamon_testing')
+    print('Creating directory structure...')
+    err = hdfs_mkdir(prefix)
     if err != 0:
         return err
-    err = hdfs_mkdir('trozamon_testing/input')
+    err = hdfs_mkdir(input_unstructured)
     if err != 0:
         return err
-    err = hdfs_mkdir('trozamon_testing/output')
+    err = hdfs_mkdir(input_structured)
     if err != 0:
         return err
-    err = hdfs_put('pom.xml', 'trozamon_testing/input/pom.xml')
+    err = hdfs_mkdir(output_prefix)
+    if err != 0:
+        return err
+    print('Uploading unstructured data...')
+    err = hdfs_put('pom.xml', '/'.join([input_unstructured, 'pom.xml']))
     if err != 0:
         return err
 
-    print("Starting to run tests...")
+    print('Starting to run tests...')
+    results = {}
+    ret = 0
     for test in tests:
         res = test()
-        if res != 0:
-            print(test.__name__ + ': FAILURE')
-            return res
+        if res == 0:
+            results[test.__name__] = True
+        else:
+            ret = 1
+            results[test.__name__] = False
 
-    return 0
+    for test in sorted(results.keys()):
+        if results[test]:
+            print(test + ': SUCCESS')
+        else:
+            print(test + ': FAILURE')
 
-if __name__ == "__main__":
+    return ret
+
+if __name__ == '__main__':
     sys.exit(run())
