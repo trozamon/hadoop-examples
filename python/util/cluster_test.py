@@ -2,15 +2,51 @@ import sys
 import argparse
 import subprocess
 
+queue = 'staff'
+__version__ = '2.5.0'
+
 big_description = """Hadoop and related software cluster tester. Given the
 fast-paced nature of Hadoop, Spark, Hive, and other technologies, running a
 test suite after an upgrade can ensure that all expected functionality
 continues to work.  This script will generate and upload data to
 $HOME/trozamon_testing in HDFS."""
 
-def test_hadoop_java():
-    print("Testing Hadoop Java")
+def hdfs_mkdir(dir):
+    if subprocess.call('hdfs dfs -test -d ' + dir, shell=True) != 0:
+        if subprocess.call('hdfs dfs -mkdir ' + dir, shell=True) != 0:
+            print('Failed to create ' + dir + ' in HDFS')
+            return 1
     return 0
+
+def hdfs_put(local, remote):
+    if subprocess.call('hdfs dfs -test -f ' + remote, shell=True) != 0:
+        if subprocess.call('hdfs dfs -put ' + local + ' ' + remote,
+                shell=True) != 0:
+            print('Failed to upload ' + local + ' to ' + remote)
+            return 1
+    return 0
+
+def hdfs_rmdir(dir):
+    if subprocess.call('hdfs dfs -test -d ' + dir, shell=True) == 0:
+        return subprocess.call('hdfs dfs -rm -r ' + dir, shell=True)
+    return 0
+
+def test_hadoop_java():
+    cmd = ' '.join([
+        'yarn jar hadoop/target/hadoop-examples-hadoop-' + __version__ + '.jar',
+        'com.alectenharmsel.research.LineCount',
+        '-Dmapreduce.job.queuename=' + queue,
+        'trozamon_testing/input',
+        'trozamon_testing/output/hadoop_java']
+        )
+
+    if hdfs_rmdir('trozamon_testing/output/hadoop_java') != 0:
+        return 1
+
+    print('Testing Hadoop Java by running:')
+    print(cmd)
+
+    return subprocess.call(cmd, shell=True)
 
 def test_hadoop_streaming():
     print("Testing Hadoop Streaming")
@@ -82,30 +118,30 @@ def run():
         tests.append(test_spark)
 
     print("Running \"mvn package -DskipTests\"...")
-    if subprocess.call("mvn package -DskipTests", shell=True,
-            stdout=subprocess.DEVNULL) != 0:
+    if subprocess.call("mvn package -DskipTests", shell=True) != 0:
         print("Maven build failed. Are you running this in the root " +
                 "directory of the repo?")
         return 1
 
     print("Uploading pom.xml to trozamon_testing/input/pom.xml...")
-    if subprocess.call("hdfs dfs -mkdir trozamon_testing", shell=True) != 0:
-        return 1
-    if subprocess.call("hdfs dfs -mkdir trozamon_testing/input",
-            shell=True) != 0:
-        return 1
-    if subprocess.call(
-            "hdfs dfs -put pom.xml trozamon_testing/input/pom.xml",
-            shell=True,
-            stdout=subprocess.DEVNULL) != 0:
-        print("Uploading files to HDFS is _not_ working")
-        return 1
+    err = hdfs_mkdir('trozamon_testing')
+    if err != 0:
+        return err
+    err = hdfs_mkdir('trozamon_testing/input')
+    if err != 0:
+        return err
+    err = hdfs_mkdir('trozamon_testing/output')
+    if err != 0:
+        return err
+    err = hdfs_put('pom.xml', 'trozamon_testing/input/pom.xml')
+    if err != 0:
+        return err
 
     print("Starting to run tests...")
     for test in tests:
         res = test()
         if res != 0:
-            print("FAILURE")
+            print(str(test) + ': FAILURE')
             return res
 
     return 0
