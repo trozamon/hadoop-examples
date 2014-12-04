@@ -97,8 +97,18 @@ def test_spark():
     return subprocess.call(cmd, shell=True)
 
 def test_pyspark():
-    print("Testing PySpark")
-    return 1
+    cmd = ' '.join([
+        'spark-submit',
+        '--master yarn-client',
+        '--queue ' + queue,
+        'python/spark/lc.py',
+        input_unstructured
+        ])
+
+    print('Testing PySpark by running:')
+    print(cmd)
+
+    return subprocess.call(cmd, shell=True)
 
 def test_hive():
     print("Testing Hive")
