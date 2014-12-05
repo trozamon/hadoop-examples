@@ -119,8 +119,16 @@ def test_pyspark():
     return subprocess.call(cmd, shell=True)
 
 def test_hive():
-    print("Testing Hive")
-    return 1
+    cmd = ' '.join([
+        'hive',
+        '--hiveconf mapreduce.job.queuename=' + queue,
+        '-f hive/cluster_test.sql'
+        ])
+
+    print('Testing Hive by running:')
+    print(cmd)
+
+    return subprocess.call(cmd, shell=True)
 
 def run():
     parser = argparse.ArgumentParser(description=big_description)
@@ -164,12 +172,13 @@ def run():
         tests.append(test_hadoop_streaming)
     if parsed_args.pig:
         tests.append(test_pig)
-    if parsed_args.hive:
-        tests.append(test_hive)
     if parsed_args.pyspark:
         tests.append(test_pyspark)
     if parsed_args.spark:
         tests.append(test_spark)
+    # Hive should always be last - it munges data
+    if parsed_args.hive:
+        tests.append(test_hive)
 
     print('Running "mvn package -DskipTests"...')
     if subprocess.call('mvn package -DskipTests', shell=True) != 0:
