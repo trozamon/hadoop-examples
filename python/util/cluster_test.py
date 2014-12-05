@@ -73,8 +73,16 @@ def test_hadoop_streaming():
     return subprocess.call(cmd, shell=True)
 
 def test_pig():
-    print("Testing Pig")
-    return 1
+    cmd = ' '.join([
+        'pig',
+        '-Dmapreduce.job.queuename=' + queue,
+        '-f pig/cluster_test.pig'
+        ])
+
+    print('Testing Pig by running:')
+    print(cmd)
+
+    return subprocess.call(cmd, shell=True)
 
 def test_spark():
     outdir = '/'.join([output_prefix, 'spark'])
@@ -184,6 +192,10 @@ def run():
         return err
     print('Uploading unstructured data...')
     err = hdfs_put('pom.xml', '/'.join([input_unstructured, 'pom.xml']))
+    if err != 0:
+        return err
+    print('Uploading structured data...')
+    err = hdfs_put('structured.data', '/'.join([input_structured, 'data']))
     if err != 0:
         return err
 
