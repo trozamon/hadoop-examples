@@ -25,33 +25,27 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
 enum LcCounters
 {
     NUM_LINES
 }
 
-public class LineCount extends Configured implements Tool
+public class LineCount
 {
-    public class Map extends Mapper<Text, Text, Text, LongWritable>
+    public static class Map extends Mapper<Object, Text, Text, LongWritable>
     {
-        Map()
-        {
-
-        }
-
-        public void map(Text key, Text contents, Context context) throws IOException, InterruptedException
+        public void map(Object key, Text contents, Context context) throws IOException, InterruptedException
         {
             int i = 0;
             int lastI = 0;
@@ -72,11 +66,11 @@ public class LineCount extends Configured implements Tool
                 numLines++;
             }
 
-            context.write(key, new LongWritable(numLines));
+            context.write(new Text("lc"), new LongWritable(numLines));
         }
     }
 
-    public class Reduce extends Reducer<Text, LongWritable, Text, LongWritable>
+    public static class Reduce extends Reducer<Text, LongWritable, Text, LongWritable>
     {
         public void reduce(Text key, Iterable<LongWritable> counts, Context context) throws IOException, InterruptedException
         {
@@ -92,51 +86,41 @@ public class LineCount extends Configured implements Tool
         }
     }
 
-    public int run(String[] args) throws Exception
-    {
-        if(args.length != 2)
-        {
-            System.err.println("Usage: LineCounter <input> <output>");
-            System.exit(-1);
-        }
-
-        Job job = new Job(getConf(), "LineCount");
-        job.setJarByClass(LineCount.class);
-
-        job.setInputFormatClass(WholeBlockInputFormat.class);
-
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
-
-        job.setMapperClass(Map.class);
-        job.setReducerClass(Reduce.class);
-
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(LongWritable.class);
-
-        Configuration check = job.getConfiguration();
-        boolean success = job.waitForCompletion(true);
-
-        //Get the counter here, output to a file called total in the dir
-        Counters counters = job.getCounters();
-
-        //Throw it in the file
-        Path outPath = new Path(args[1]);
-        FileSystem fs = outPath.getFileSystem(check);
-        OutputStream out = fs.create(new Path(outPath, "total"));
-        String total = counters.findCounter(LcCounters.NUM_LINES).getValue() + "\n";
-        out.write(total.getBytes());
-        out.close();
-        return success ? 0 : 1;
-    }
-
     public static void main(String[] args) throws Exception
     {
         GenericOptionsParser parse = new GenericOptionsParser(new Configuration(), args);
         Configuration conf = parse.getConfiguration();
 
-        int res = ToolRunner.run(conf, new LineCount(), parse.getRemainingArgs());
+        String[] remainingArgs = parse.getRemainingArgs();
+        if(remainingArgs.length != 2)
+        {
+            System.err.println("Usage: LineCount <input> <output>");
+            System.exit(-1);
+        }
 
+        Job job = Job.getInstance(conf, "LineCount");
+        job.setJarByClass(LineCount.class);
+
+        job.setMapperClass(Map.class);
+        job.setCombinerClass(Reduce.class);
+        job.setReducerClass(Reduce.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(LongWritable.class);
+
+        //job.setInputFormatClass(WholeBlockInputFormat.class);
+
+        FileInputFormat.addInputPath(job, new Path(remainingArgs[0]));
+        FileOutputFormat.setOutputPath(job, new Path(remainingArgs[1]));
+
+        boolean success = job.waitForCompletion(true);
+
+        //Get the counter here and print it
+        Counters counters = job.getCounters();
+        long total = counters.findCounter(LcCounters.NUM_LINES).getValue();
+        System.out.println(Long.toString(total));
+
+        int res = success ? 0 : 1;
         System.exit(res);
     }
 }

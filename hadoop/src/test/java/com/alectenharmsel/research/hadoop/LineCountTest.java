@@ -22,8 +22,8 @@ public class LineCountTest {
 
     @Before
     public void setUp() {
-        mapDriver = new MapDriver(new LineCount().new Map());
-        reduceDriver = new ReduceDriver(new LineCount().new Reduce());
+        mapDriver = new MapDriver(new LineCount.Map());
+        reduceDriver = new ReduceDriver(new LineCount.Reduce());
 
         mapDriver
             .withInput(new Text("heyo"),
