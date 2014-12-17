@@ -27,7 +27,7 @@ public class LineCountTest {
 
         mapDriver
             .withInput(new Text("heyo"),
-                    new Text("boring line contents\nlol more lines\n"))
+                    new Text("lol more lines\n"))
             .withInput(new Text("heyo2"), new Text("boring line contents"));
 
         key = new Text("heyo");
@@ -46,7 +46,7 @@ public class LineCountTest {
     @Test
     public void testFirstMapOutput() throws IOException {
         res = mapDriver.run();
-        Assert.assertEquals("First map output should be 2", (long) 2,
+        Assert.assertEquals("First map output should be 1", (long) 1,
                 res.get(0).getSecond().get());
     }
 
