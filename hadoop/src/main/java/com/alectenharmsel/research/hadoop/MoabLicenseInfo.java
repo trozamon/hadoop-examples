@@ -24,22 +24,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
-public class MoabLicenseInfo extends Configured implements Tool
+public class MoabLicenseInfo
 {
-
-    public class Map extends Mapper<LongWritable, Text, Text, Text>
+    public static class Map extends Mapper<LongWritable, Text, Text, Text>
     {
         public void map(LongWritable key, Text contents, Context context) throws IOException, InterruptedException
         {
@@ -72,7 +70,7 @@ public class MoabLicenseInfo extends Configured implements Tool
         }
     }
 
-    public class Reduce extends Reducer<Text, Text, Text, Text>
+    public static class Reduce extends Reducer<Text, Text, Text, Text>
     {
         public void reduce(Text key, Iterable<Text> counts, Context context) throws IOException, InterruptedException
         {
@@ -112,20 +110,21 @@ public class MoabLicenseInfo extends Configured implements Tool
         }
     }
 
-    public int run(String[] args) throws Exception
+    public static void main(String[] args) throws Exception
     {
-        if(args.length != 2)
+        GenericOptionsParser parser = new GenericOptionsParser(new Configuration(), args);
+        Configuration conf = parser.getConfiguration();
+        conf.set("mapreduce.output.textoutputformat.separator", ",");
+
+        String[] remainingArgs = parser.getRemainingArgs();
+        if(remainingArgs.length != 2)
         {
-            System.err.println("Usage: MoabLicenses <input> <output>");
+            System.err.println("Usage: LineCount <input> <output>");
             System.exit(-1);
         }
 
-        Configuration conf = getConf();
-        Job job = new Job(conf, "MoabLicenses");
+        Job job = Job.getInstance(conf, "MoabLicenseInfo");
         job.setJarByClass(MoabLicenseInfo.class);
-
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
         job.setMapperClass(Map.class);
         job.setReducerClass(Reduce.class);
@@ -133,21 +132,10 @@ public class MoabLicenseInfo extends Configured implements Tool
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
-        Configuration check = job.getConfiguration();
-        boolean success = job.waitForCompletion(true);
+        FileInputFormat.addInputPath(job, new Path(remainingArgs[0]));
+        FileOutputFormat.setOutputPath(job, new Path(remainingArgs[1]));
 
-        return success ? 0 : 1;
-    }
-
-    public static void main(String[] args) throws Exception
-    {
-        GenericOptionsParser parser = new GenericOptionsParser(new Configuration(), args);
-        Configuration conf = parser.getConfiguration();
-        conf.set("mapreduce.output.textoutputformat.separator", ",");
-
-        int res = ToolRunner.run(conf, new MoabLicenseInfo(),
-                parser.getRemainingArgs());
-
+        int res = job.waitForCompletion(true) ? 0 : 1;
         System.exit(res);
     }
 }

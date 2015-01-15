@@ -22,8 +22,8 @@ public class MoabLicenseInfoTest {
 
     @Before
     public void setUp() {
-        mapDriver = new MapDriver(new MoabLicenseInfo().new Map());
-        reduceDriver = new ReduceDriver(new MoabLicenseInfo().new Reduce());
+        mapDriver = new MapDriver(new MoabLicenseInfo.Map());
+        reduceDriver = new ReduceDriver(new MoabLicenseInfo.Reduce());
 
         key = new Text("cfd_solv_ser-05-11");
         vals = new ArrayList<Text>();
