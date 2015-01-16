@@ -47,8 +47,10 @@ object MoabLicenseInfo {
     sc.stop()
   }
 
-  def run(data: RDD[String]): RDD[(String, String, Double, Double)] = {
-    val split = data.map(
+  def run(data: RDD[String]): RDD[(String, String, Float, Float)] = {
+    val split = data.filter(
+      line => line.contains("License")
+    ).map(
       line => line.split(" ")
     ).map(
       arr => arr.filter(x => x.size >= 1)
@@ -66,12 +68,14 @@ object MoabLicenseInfo {
       )
     )
 
+    licenses.persist()
+
     val sum = licenses.map(
-      arr => (arr(0), arr(1).toDouble)
+      arr => (arr(0), arr(1).toFloat)
     ).reduceByKey((a, b) => a + b)
 
     val total = licenses.map(
-      arr => (arr(0), arr(2).toDouble)
+      arr => (arr(0), arr(2).toFloat)
     ).reduceByKey((a, b) => a + b)
 
     val ret = sum.join(total).map(
