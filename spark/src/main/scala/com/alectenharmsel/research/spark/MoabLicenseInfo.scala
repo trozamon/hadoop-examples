@@ -36,6 +36,7 @@ object MoabLicenseInfo {
     out = args(1)
 
     val conf = new SparkConf().setAppName("MoabLicenseInfo")
+    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sc = new SparkContext(conf)
 
     val raw = sc.textFile(in)
