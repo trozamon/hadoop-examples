@@ -1,6 +1,7 @@
 import sys
 import argparse
 import subprocess
+import os
 
 queue = 'staff'
 __version__ = '2.5.0'
@@ -8,6 +9,7 @@ prefix = 'trozamon_testing'
 input_unstructured = '/'.join([prefix, 'input_unstructured'])
 input_structured = '/'.join([prefix, 'input_structured'])
 output_prefix = '/'.join([prefix, 'output'])
+mrjob_conf = 'python/mrjob.conf'
 
 big_description = """Hadoop and related software cluster tester. Given the
 fast-paced nature of Hadoop, Spark, Hive, and other technologies, running a
@@ -49,6 +51,20 @@ def test_hadoop_java():
         return 1
 
     print('Testing Hadoop Java by running:')
+    print(cmd)
+
+    return subprocess.call(cmd, shell=True)
+
+def test_mrjob():
+    cmd = ' '.join([
+        'python',
+        'python/mrjob.py',
+        'structured.data',
+        '-r',
+        'hadoop'
+        ])
+
+    print('Testing MRJob by running:')
     print(cmd)
 
     return subprocess.call(cmd, shell=True)
@@ -154,6 +170,9 @@ def run():
     parser.add_argument('--hive',
             action='store_true',
             help='Run a selection of Hive queries')
+    parser.add_argument('--mrjob',
+            action='store_true',
+            help='Run a mrjob script')
 
     parsed_args = parser.parse_args()
 
@@ -165,6 +184,7 @@ def run():
         parsed_args.hive = True
         parsed_args.spark = True
         parsed_args.pyspark = True
+        parsed_args.mrjob = True
 
     if parsed_args.hadoop_java:
         tests.append(test_hadoop_java)
@@ -176,6 +196,9 @@ def run():
         tests.append(test_pyspark)
     if parsed_args.spark:
         tests.append(test_spark)
+    if parsed_args.mrjob:
+        os.environ['MRJOB_CONF'] = mrjob_conf
+        tests.append(test_mrjob)
     # Hive should always be last - it munges data
     if parsed_args.hive:
         tests.append(test_hive)
