@@ -57,8 +57,8 @@ def test_hadoop_java():
 
 def test_mrjob():
     cmd = ' '.join([
-        'python',
-        'python/mrjob.py',
+        'python2.7',
+        'python/mrjob_test.py',
         'structured.data',
         '-r',
         'hadoop'
@@ -197,7 +197,7 @@ def run():
     if parsed_args.spark:
         tests.append(test_spark)
     if parsed_args.mrjob:
-        os.environ['MRJOB_CONF'] = mrjob_conf
+        os.environ['MRJOB_CONF'] = '/'.join([os.environ['PWD'], mrjob_conf])
         tests.append(test_mrjob)
     # Hive should always be last - it munges data
     if parsed_args.hive:
