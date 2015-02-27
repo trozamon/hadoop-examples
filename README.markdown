@@ -1,5 +1,7 @@
 # Hadoop Examples/Testing
 
+This code is tested against and used to verify a CDH 5.3.2 cluster.
+
 This repo contains:
 
 * A collection of example jobs:
@@ -9,6 +11,7 @@ This repo contains:
   * PySpark
   * Hive
   * Pig
+  * MRJob
 * A script to run all or some of these in an automated way to ensure a properly
   operating cluster
 

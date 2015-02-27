@@ -4,7 +4,7 @@
     <groupId>com.alectenharmsel.research</groupId>
     <artifactId>hadoop-examples</artifactId>
     <packaging>pom</packaging>
-    <version>2.5.0</version>
+    <version>cdh5.3.2</version>
     <name>hadoop-examples</name>
     <url>http://github.com/trozamon/hadoop-examples</url>
     <description>

@@ -4,10 +4,11 @@
     <parent>
         <groupId>com.alectenharmsel.research</groupId>
         <artifactId>hadoop-examples</artifactId>
-        <version>2.5.0</version>
+        <version>cdh5.3.2</version>
     </parent>
     <url>http://github.com/trozamon/hadoop-examples</url>
     <artifactId>hadoop-examples-spark</artifactId>
+    <version>1.2.0-cdh5.3.2</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -15,7 +16,7 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.10</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
