@@ -4,7 +4,8 @@ import subprocess
 import os
 
 queue = 'staff'
-__version__ = '2.5.0-cdh5.3.2'
+__version_hadoop__ = '2.5.0-cdh5.3.2'
+__version_spark__ = '1.2.0-cdh5.3.2'
 prefix = 'trozamon_testing'
 input_unstructured = '/'.join([prefix, 'input_unstructured'])
 input_structured = '/'.join([prefix, 'input_structured'])
@@ -40,7 +41,7 @@ def hdfs_rmdir(dir):
 def test_hadoop_java():
     outdir = '/'.join([output_prefix, 'hadoop_java'])
     cmd = ' '.join([
-        'yarn jar hadoop/target/hadoop-examples-hadoop-' + __version__ + '.jar',
+        'yarn jar hadoop/target/hadoop-examples-hadoop-' + __version_hadoop__ + '.jar',
         'com.alectenharmsel.research.LineCount',
         '-Dmapreduce.job.queuename=' + queue,
         input_unstructured,
@@ -107,7 +108,7 @@ def test_spark():
         '--master yarn-client',
         '--queue ' + queue,
         '--class com.alectenharmsel.research.spark.LineCount',
-        'spark/target/hadoop-examples-spark-' + __version__ + '.jar',
+        'spark/target/hadoop-examples-spark-' + __version_spark__ + '.jar',
         input_unstructured,
         outdir
         ])
