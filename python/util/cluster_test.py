@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import sys
 import argparse
 import subprocess
@@ -23,7 +21,7 @@ $HOME/trozamon_testing in HDFS."""
 def hdfs_mkdir(dir):
     if subprocess.call('hdfs dfs -test -d ' + dir, shell=True) != 0:
         if subprocess.call('hdfs dfs -mkdir ' + dir, shell=True) != 0:
-            print('Failed to create ' + dir + ' in HDFS', file=sys.stderr)
+            print('Failed to create ' + dir + ' in HDFS')
             return 1
     return 0
 
@@ -31,7 +29,7 @@ def hdfs_put(local, remote):
     if subprocess.call('hdfs dfs -test -f ' + remote, shell=True) != 0:
         if subprocess.call('hdfs dfs -put ' + local + ' ' + remote,
                 shell=True) != 0:
-            print('Failed to upload ' + local + ' to ' + remote, file=sys.stderr)
+            print('Failed to upload ' + local + ' to ' + remote)
             return 1
     return 0
 
@@ -47,8 +45,7 @@ def test_hadoop_java():
         'com.alectenharmsel.research.LineCount',
         '-Dmapreduce.job.queuename=' + queue,
         input_unstructured,
-        outdir,
-        '2>&1'
+        outdir
         ])
 
     if hdfs_rmdir(outdir) != 0:
@@ -65,8 +62,7 @@ def test_mrjob():
         'python/mrjob_test.py',
         'structured.data',
         '-r',
-        'hadoop',
-        '2>&1'
+        'hadoop'
         ])
 
     print('Testing MRJob by running:')
@@ -82,8 +78,7 @@ def test_hadoop_streaming():
         '-input ' + input_unstructured,
         '-output ' + outdir,
         '-mapper python/srctok-map.py -reducer python/sum.py',
-        '-file python/srctok-map.py -file python/sum.py',
-        '2>&1'
+        '-file python/srctok-map.py -file python/sum.py'
         ])
 
     if hdfs_rmdir(outdir) != 0:
@@ -98,8 +93,7 @@ def test_pig():
     cmd = ' '.join([
         'pig',
         '-Dmapreduce.job.queuename=' + queue,
-        '-f pig/cluster_test.pig',
-        '2>&1'
+        '-f pig/cluster_test.pig'
         ])
 
     print('Testing Pig by running:')
@@ -116,8 +110,7 @@ def test_spark():
         '--class com.alectenharmsel.research.spark.LineCount',
         'spark/target/hadoop-examples-spark-' + __version_spark__ + '.jar',
         input_unstructured,
-        outdir,
-        '2>&1'
+        outdir
         ])
 
     if hdfs_rmdir(outdir) != 0:
@@ -134,8 +127,7 @@ def test_pyspark():
         '--master yarn-client',
         '--queue ' + queue,
         'python/spark/lc.py',
-        input_unstructured,
-        '2>&1'
+        input_unstructured
         ])
 
     print('Testing PySpark by running:')
@@ -147,8 +139,7 @@ def test_hive():
     cmd = ' '.join([
         'hive',
         '--hiveconf mapreduce.job.queuename=' + queue,
-        '-f hive/cluster_test.sql',
-        '2>&1'
+        '-f hive/cluster_test.sql'
         ])
 
     print('Testing Hive by running:')
@@ -256,7 +247,7 @@ def run():
         if results[test]:
             print(test + ': SUCCESS')
         else:
-            print(test + ': FAILURE', file=sys.stderr)
+            print(test + ': FAILURE')
 
     return ret
 
