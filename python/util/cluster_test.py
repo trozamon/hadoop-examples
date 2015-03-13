@@ -4,7 +4,7 @@ import subprocess
 import os
 
 queue = 'staff'
-__version__ = '2.5.0'
+__version__ = '2.5.0-cdh5.3.2'
 prefix = 'trozamon_testing'
 input_unstructured = '/'.join([prefix, 'input_unstructured'])
 input_structured = '/'.join([prefix, 'input_structured'])
