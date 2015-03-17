@@ -250,6 +250,8 @@ def run():
 
     if ret == 0:
         run_cmd(' '.join(['hdfs dfs -rm -r', prefix]))
+        run_cmd('rm -f hive/cluster_test.sql')
+        run_cmd('rm -f pig/cluster_test.pig')
 
     return ret
 
