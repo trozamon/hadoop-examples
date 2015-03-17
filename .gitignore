@@ -1,2 +1,5 @@
 target/
+hive/cluster_test.sql
+pig/cluster_test.pig
 *.swp
+derby.log

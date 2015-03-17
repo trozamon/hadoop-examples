@@ -9,7 +9,8 @@ seed()
 queue = 'staff'
 __version_hadoop__ = '2.5.0-cdh5.3.2'
 __version_spark__ = '1.2.0-cdh5.3.2'
-prefix = 'trozamon_testing' + str(randint(0, 100000))
+__randint__ = str(randint(0, 100000))
+prefix = 'trozamon_testing' + __randint__
 input_unstructured = '/'.join([prefix, 'input_unstructured'])
 input_structured = '/'.join([prefix, 'input_structured'])
 output_prefix = '/'.join([prefix, 'output'])
@@ -93,6 +94,14 @@ def test_pig():
         '-f pig/cluster_test.pig'
         ])
 
+    pig_in = ''
+    with open('pig/cluster_test.pig.in', 'r') as f:
+        pig_in = f.read()
+
+    pig_out = pig_in.replace('SUPER_COOL_RANDINT', __randint__)
+    with open('pig/cluster_test.pig', 'w') as f:
+        f.write(pig_out)
+
     return run_cmd(cmd)
 
 def test_spark():
@@ -129,6 +138,14 @@ def test_hive():
         '--hiveconf mapreduce.job.queuename=' + queue,
         '-f hive/cluster_test.sql'
         ])
+
+    sql_in = ''
+    with open('hive/cluster_test.sql.in', 'r') as f:
+        sql_in = f.read()
+
+    sql_out = sql_in.replace('SUPER_COOL_RANDINT', __randint__)
+    with open('hive/cluster_test.sql', 'w') as f:
+        f.write(sql_out)
 
     return run_cmd(cmd)
 
@@ -230,6 +247,9 @@ def run():
             print(test + ': SUCCESS')
         else:
             print(test + ': FAILURE')
+
+    if ret == 0:
+        run_cmd(' '.join(['hdfs dfs -rm -r', prefix]))
 
     return ret
 
