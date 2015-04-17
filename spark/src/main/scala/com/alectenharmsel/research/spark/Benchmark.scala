@@ -32,9 +32,17 @@ object Benchmark {
       return
     }
 
+    /*
+     * NOTE: Set spark.executor.memory if not submitting to YARN, otherwise
+     * the default of 512MB is used.
+     */
     val conf = new SparkConf().setAppName("Benchmark")
     val sc = new SparkContext(conf)
 
+    /*
+     * NOTE: Call coalesce() on 'data' if not submitting to YARN, otherwise
+     * it will split into way too many partitions
+     */
     val data = sc.textFile(args(0))
     val res = data.map(elem => hash(elem.toString))
 
