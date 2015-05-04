@@ -27,7 +27,7 @@ object CPUBenchmark {
 
   def main(args: Array[String]) {
     if (args.length != 3) {
-      println("Usage: CPUBenchmark <input> <numClusters> <numIterations>")
+      println("Usage: CPUBenchmark <input> <min_k> <max_k>")
       return
     }
 
@@ -38,23 +38,26 @@ object CPUBenchmark {
     val conf = new SparkConf().setAppName("CPUBenchmark")
     val sc = new SparkContext(conf)
 
+    val min = args(2).toInt
+    val max = args(3).toInt
+
     /*
      * NOTE: Call coalesce() on 'data' if not submitting to YARN, otherwise
      * it will split into way too many partitions
      */
     val rawData = sc.textFile(args(0))
-    val numClusters = args(1).toInt
-    val numIterations = args(2).toInt
 
     val data = rawData.map(
-      line => Vectors.dense(line.split(' ').map(_.toDouble))
+      line => Vectors.dense(line.split(',').map(_.toDouble))
     ).cache()
 
-    val clusters = KMeans.train(data, numClusters, numIterations)
-
-    val wssse = clusters.computeCost(data)
-
-    println("Within Set Sum of Squared Errors: " + wssse)
+    for (k <- min to max)
+    {
+      val kmeans = new KMeans().setK(k).setMaxIterations(20)
+      val clusters = kmeans.run(data)
+      val wssse = clusters.computeCost(data)
+      println(k + "," + wssse)
+    }
 
     sc.stop()
   }
