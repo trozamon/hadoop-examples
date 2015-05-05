@@ -12,7 +12,8 @@ out = list()
 random.seed()
 
 for i in range(0, int(args.n)):
-    print('/'.join([str(i), args.n]))
+    if i % 1000 == 0:
+        print('/'.join([str(i), args.n]))
 
     line = [str(random.randint(0, INTMAX)), str(random.randint(0, INTMAX))]
 
