@@ -38,8 +38,8 @@ object CPUBenchmark {
     val conf = new SparkConf().setAppName("CPUBenchmark")
     val sc = new SparkContext(conf)
 
-    val min = args(2).toInt
-    val max = args(3).toInt
+    val min = args(1).toInt
+    val max = args(2).toInt
 
     /*
      * NOTE: Call coalesce() on 'data' if not submitting to YARN, otherwise
