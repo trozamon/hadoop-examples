@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * MapReduce job to count the lines in a file
- * Used for big jobs
- */
-
 package com.alectenharmsel.examples.hadoop;
 
 import java.io.IOException;
