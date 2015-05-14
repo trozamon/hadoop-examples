@@ -1,30 +1,16 @@
-# Hadoop Examples/Testing
+# Hadoop Examples
+This repository contains some example Hadoop jobs to demonstrate how to test
+and package them. In the words of Kent Beck:
 
-This code is tested against and used to verify a CDH 5.3.2 cluster.
+> If a feature doesn't have a test, it doesn't exist
 
-This repo contains:
+## CodeTokenizer
+CodeTokenizer reads input source code, tokenizes it, and reports the counts of
+all the tokens.
 
-* A collection of example jobs:
-  * Hadoop
-  * Hadoop Streaming
-  * Spark
-  * PySpark
-  * Hive
-  * Pig
-  * MRJob
-* A script to run all or some of these in an automated way to ensure a properly
-  operating cluster
+## MoabLicenseInfo
+MoabLicenseInfo can scan Moab (an HPC scheduler from Adaptive Computing) logs
+to determine software license usage statistics.
 
-## Cluster Testing
-
-    python/util/cluster_test.py
-
-The above script will upload data and run sample jobs to ensure a properly
-configured cluster.
-
-## Building
-
-    mvn package
-
-The above command will build and package all of the Java and Scala code, as
-well as run MapReduce/Spark unit tests to ensure correctness.
+## Hadoop Version
+This code is tested against a CDH 5.3.2 cluster.
