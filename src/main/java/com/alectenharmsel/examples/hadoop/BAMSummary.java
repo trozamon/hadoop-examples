@@ -51,34 +51,60 @@ public class BAMSummary extends Configured implements Tool
         return name[0];
     }
 
-    public static class Map extends Mapper<LongWritable, SAMRecordWritable, Text, LongWritable>
+    public static class Map extends
+        Mapper<LongWritable, SAMRecordWritable, Text, LongWritable>
     {
-        public void map(LongWritable key, SAMRecordWritable contents, Context context) throws IOException, InterruptedException
+        public void map(LongWritable key, SAMRecordWritable contents,
+                Context context) throws IOException,
+               InterruptedException
         {
             SAMRecord rec = contents.get();
             Boolean proper = false;
             String name = getRecordName(rec.getReadName());
+            LongWritable one = new LongWritable(1);
 
             try
             {
                 proper = rec.getProperPairFlag();
+
+                if (proper)
+                {
+                        context.write(new Text(name + "-properlypaired"), one);
+                }
+
+                if (rec.getSecondOfPairFlag())
+                {
+                    context.write(new Text(name + "-read2"), one);
+                }
+                else
+                {
+                    context.write(new Text(name + "-read1"), one);
+                }
             }
             catch (IllegalStateException e)
             {
             }
 
-            if (!proper)
+            if (rec.getDuplicateReadFlag())
             {
-                context.write(new Text(name + "-improper"), new LongWritable(1));
+                context.write(new Text(name + "-duplicates"), one);
             }
 
-            context.write(new Text(name + "-total"), new LongWritable(1));
+            if (rec.isValid() != null)
+            {
+                context.write(new Text(name + "-invalid"), one);
+            }
+
+            context.write(new Text(name + "-total"), one);
         }
     }
 
-    public static class Reduce extends Reducer<Text, LongWritable, Text, LongWritable>
+    public static class Reduce extends
+            Reducer<Text, LongWritable, Text, LongWritable>
     {
-        public void reduce(Text key, Iterable<LongWritable> vals, Context context) throws IOException, InterruptedException
+        public void reduce(Text key, Iterable<LongWritable> vals,
+                        Context context) throws IOException,
+               InterruptedException
         {
             long sum = 0;
 
@@ -119,10 +145,12 @@ public class BAMSummary extends Configured implements Tool
 
     public static void main(String[] args) throws Exception
     {
-        GenericOptionsParser parse = new GenericOptionsParser(new Configuration(), args);
+        GenericOptionsParser parse = new GenericOptionsParser(
+                        new Configuration(), args);
         Configuration conf = parse.getConfiguration();
 
-        int res = ToolRunner.run(conf, new BAMSummary(), parse.getRemainingArgs());
+        int res = ToolRunner.run(conf, new BAMSummary(),
+                        parse.getRemainingArgs());
 
         System.exit(res);
     }
